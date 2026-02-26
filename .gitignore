@@ -28,5 +28,12 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+
+tasks.json
+
+# Compiled binaries
+main
+tasks
+todo-cli-go
