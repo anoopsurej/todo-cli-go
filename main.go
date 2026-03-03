@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
+	"text/tabwriter"
 	"time"
 )
 
@@ -16,8 +18,8 @@ type Task struct {
 
 const file = "tasks.json"
 
-func loadTasks(filename string) ([]Task, error) {
-	data, err := os.ReadFile(filename)
+func loadTasks() ([]Task, error) {
+	data, err := os.ReadFile(file)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return []Task{}, nil
@@ -31,12 +33,12 @@ func loadTasks(filename string) ([]Task, error) {
 	return v, nil
 }
 
-func saveTasks(filename string, tasks []Task) error {
+func saveTasks(tasks []Task) error {
 	data, err := json.Marshal(tasks)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filename, data, 0644)
+	err = os.WriteFile(file, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -60,6 +62,59 @@ func addTask(tasks []Task, description string) []Task {
 	return append(tasks, t)
 }
 
+func relativeTime(t time.Time) string {
+	duration := time.Since(t)
+	hours, minutes := duration.Hours(), duration.Minutes()
+	if hours >= 24 {
+		numDays := int(hours / 24)
+		var article string
+		if numDays > 1 {
+			article = "days"
+		} else {
+			article = "day"
+		}
+		return fmt.Sprintf("%d %s ago", numDays, article)
+	}
+	if minutes >= 60 {
+		numHours := int(minutes / 60)
+		var article string
+		if numHours > 1 {
+			article = "hours"
+		} else {
+			article = "hour"
+		}
+		return fmt.Sprintf("%d %s ago", numHours, article)
+	}
+	if int(minutes) >= 1 {
+		var article string
+		if minutes > 1 {
+			article = "minutes"
+		} else {
+			article = "minute"
+		}
+		return fmt.Sprintf("%d %s ago", int(minutes), article)
+	}
+	return "a few seconds ago"
+}
+
+func listTasks(tasks []Task, all bool) {
+	w := tabwriter.NewWriter(os.Stdout, 10, 0, 5, ' ', 0)
+	if all {
+		fmt.Fprintln(w, "ID\tDescription\tCreated\tDone")
+		for _, val := range tasks {
+			fmt.Fprintf(w, "%v\t%v\t%v\t%v\n", val.ID, val.Description, relativeTime(val.CreatedAt), val.Completed)
+		}
+	} else {
+		fmt.Fprintln(w, "ID\tDescription\tCreated")
+		for _, val := range tasks {
+			if !val.Completed {
+				fmt.Fprintf(w, "%v\t%v\t%v\n", val.ID, val.Description, relativeTime(val.CreatedAt))
+			}
+		}
+	}
+	w.Flush()
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Error: Not enough arguments")
@@ -75,19 +130,28 @@ func main() {
 			os.Exit(1)
 		}
 		d := os.Args[2]
-		tasks, err := loadTasks(file)
+		tasks, err := loadTasks()
 		if err != nil {
 			fmt.Println("Error: Failed to load tasks")
 			os.Exit(1)
 		}
 		tasks = addTask(tasks, d)
-		err = saveTasks(file, tasks)
+		err = saveTasks(tasks)
 		if err != nil {
 			fmt.Println("Error: Failed to save task")
 			os.Exit(1)
 		}
 		fmt.Println("Successfully saved task")
-		os.Exit(0)
+	case "list":
+		listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+		listAll := listCmd.Bool("all", false, "List all tasks including completed")
+		listCmd.Parse(os.Args[2:])
+		tasks, err := loadTasks()
+		if err != nil {
+			fmt.Println("Error: Failed to load tasks")
+			os.Exit(1)
+		}
+		listTasks(tasks, *listAll)
 	default:
 		fmt.Println("Error: Urecognized command")
 		os.Exit(1)
