@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"text/tabwriter"
 	"time"
 )
@@ -115,6 +117,22 @@ func listTasks(tasks []Task, all bool) {
 	w.Flush()
 }
 
+func completeTask(tasks []Task, id int) error {
+	var taskIdx int
+	found := false
+	for idx, val := range tasks {
+		if val.ID == id {
+			taskIdx = idx
+			found = true
+		}
+	}
+	if !found {
+		return errors.New("Error: Task not found")
+	}
+	tasks[taskIdx].Completed = true
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Error: Not enough arguments")
@@ -152,6 +170,32 @@ func main() {
 			os.Exit(1)
 		}
 		listTasks(tasks, *listAll)
+	case "complete":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: ID not provided")
+			os.Exit(1)
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Error: Invalid ID")
+			os.Exit(1)
+		}
+		tasks, err := loadTasks()
+		if err != nil {
+			fmt.Println("Error: Failed to load tasks")
+			os.Exit(1)
+		}
+		err = completeTask(tasks, id)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		err = saveTasks(tasks)
+		if err != nil {
+			fmt.Println("Error: Failed to save task")
+			os.Exit(1)
+		}
+		fmt.Println("Successfully completed task")
 	default:
 		fmt.Println("Error: Urecognized command")
 		os.Exit(1)
