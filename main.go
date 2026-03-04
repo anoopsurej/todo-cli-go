@@ -180,14 +180,16 @@ func main() {
 		fmt.Println("Successfully saved task")
 	case "list":
 		listCmd := flag.NewFlagSet("list", flag.ExitOnError)
-		listAll := listCmd.Bool("all", false, "List all tasks including completed")
+		var listAll bool
+		listCmd.BoolVar(&listAll, "all", false, "List all tasks including completed")
+		listCmd.BoolVar(&listAll, "a", false, "List all tasks including completed")
 		listCmd.Parse(os.Args[2:])
 		tasks, err := loadTasks()
 		if err != nil {
 			fmt.Println("Error: Failed to load tasks")
 			os.Exit(1)
 		}
-		listTasks(tasks, *listAll)
+		listTasks(tasks, listAll)
 	case "complete":
 		if len(os.Args) < 3 {
 			fmt.Println("Error: ID not provided")

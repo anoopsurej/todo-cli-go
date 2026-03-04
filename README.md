@@ -7,7 +7,7 @@ A simple CLI task manager written in Go.
 ```
 tasks add <description>       # Create a new task
 tasks list                    # List incomplete tasks
-tasks list -all               # List all tasks including completed
+tasks list -a / --all         # List all tasks including completed
 tasks complete <id>           # Mark a task as done
 tasks delete <id>             # Delete a task
 ```
