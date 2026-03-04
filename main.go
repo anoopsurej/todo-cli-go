@@ -133,6 +133,24 @@ func completeTask(tasks []Task, id int) error {
 	return nil
 }
 
+func deleteTask(tasks []Task, id int) ([]Task, error) {
+	var taskIdx int
+	found := false
+	for idx, val := range tasks {
+		if val.ID == id {
+			taskIdx = idx
+			found = true
+		}
+	}
+	if !found {
+		return nil, errors.New("Error: Task not found")
+	}
+	result := make([]Task, 0, len(tasks)-1)
+	result = append(result, tasks[:taskIdx]...)
+	result = append(result, tasks[taskIdx+1:]...)
+	return result, nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Error: Not enough arguments")
@@ -196,6 +214,32 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Successfully completed task")
+	case "delete":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: ID not provided")
+			os.Exit(1)
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Error: Invalid ID")
+			os.Exit(1)
+		}
+		tasks, err := loadTasks()
+		if err != nil {
+			fmt.Println("Error: Failed to load tasks")
+			os.Exit(1)
+		}
+		updatedTasks, err := deleteTask(tasks, id)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		err = saveTasks(updatedTasks)
+		if err != nil {
+			fmt.Println("Error: Failed to save task")
+			os.Exit(1)
+		}
+		fmt.Println("Successfully deleted task")
 	default:
 		fmt.Println("Error: Urecognized command")
 		os.Exit(1)
