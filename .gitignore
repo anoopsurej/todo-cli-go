@@ -35,5 +35,5 @@ tasks.json
 
 # Compiled binaries
 main
-tasks
+/tasks
 todo-cli-go

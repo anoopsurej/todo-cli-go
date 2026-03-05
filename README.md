@@ -15,7 +15,7 @@ tasks delete <id>             # Delete a task
 ## Build
 
 ```bash
-go build -o tasks .
+go build -o tasks ./cmd/tasks/
 ```
 
 ## Data
