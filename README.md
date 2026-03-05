@@ -12,10 +12,13 @@ tasks complete <id>           # Mark a task as done
 tasks delete <id>             # Delete a task
 ```
 
-## Build
+## Development
 
 ```bash
-go build -o tasks ./cmd/tasks/
+make build   # compile the binary
+make test    # run tests
+make check   # run go vet
+make clean   # remove compiled binary
 ```
 
 ## Data
